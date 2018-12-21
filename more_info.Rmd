@@ -1,0 +1,212 @@
+---
+title: "More information"
+author: "Group 12: Sarah Abowitz and Victoria Zheng"
+date: "Last updated on `r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    code_folding: hide
+    df_print: kable
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# DO NOT EDIT THIS BLOCK UNLESS YOU KNOW WHAT YOU ARE DOING:
+
+# Set output types
+knitr::opts_chunk$set(
+  message = FALSE, warning = FALSE, results= FALSE, fig.width = 16/2, fig.height = 9/2
+)
+
+# Load necessary packages
+
+library(tidyverse)
+library(lubridate)
+library(stringr)
+
+```
+
+<!-- wranglezone ~ for loading and wrangling data! -->
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+# yeah so we were gonna WRANGLE that DATA
+party_in_nyc <- read_csv("party_in_nyc.csv") %>%
+  drop_na() %>%  mutate(date = as_date(`Created Date`))
+
+weather_in_nyc <- read_csv(
+  "weather_data_nyc_central_park_2016.csv") %>% drop_na() %>%
+  filter(precipitation != "T" & `snow fall` != "T"
+                       & `snow depth` != "T") 
+
+weather_in_nyc$precipitation <- as.numeric(
+  weather_in_nyc$precipitation)
+
+weather_in_nyc$`snow fall` <- as.numeric(
+  weather_in_nyc$`snow fall`)
+
+weather_in_nyc$`snow depth` <- as.numeric(
+  weather_in_nyc$`snow depth`)
+
+partylook <- party_in_nyc %>% 
+  separate(col = 'Created Date', into = c("Created_Date",
+                                "Created_Time"), sep = " ") %>% 
+  mutate(CreatedDate = Created_Date) %>%
+  mutate(CreatedTime = Created_Time) %>%
+  separate( col = 'Closed Date', into = c("Closed_Date",
+                                 "Closed_Time"), sep = " ") %>%
+  mutate(Created_Date = ymd(Created_Date), Closed_Date = ymd(
+    Closed_Date), true_in2016 = str_detect(Created_Date,
+                                           "2016-")) %>% 
+  filter(true_in2016 == TRUE) %>%
+  separate(col = 'Created_Time', into = c("Created_Hour",
+             "Created_Minute", "Created_Second"), sep = ":") %>% 
+  separate( col = 'Created_Date', into = c("Year", "Month",
+                                           "Day"), sep = "-")
+#only if created in 2016 noise complaints
+
+weatherlook <- weather_in_nyc %>% 
+  separate(col = date, into = c("Day", "Month", "Year"),
+           sep = "-") %>%  
+  mutate(Day = recode(Day, "1" = "01", "2" = "02", "3"="03",
+         "4"="04", "5" = "05", "6"="06", "7"="07", "8"="08",
+         "9"="09")) %>%  
+  mutate(Month = recode(Month, "1" = "01", "2" = "02", "3"="03",
+         "4"="04", "5" = "05", "6"="06", "7"="07", "8"="08",
+         "9"="09"))
+
+both <- left_join(partylook, weatherlook, by = c("Year",
+                                            "Month", "Day"))%>%
+  mutate(precipitation = as.numeric(precipitation)) %>%
+  mutate(`snow fall` = as.numeric(`snow fall`)) %>%
+  mutate(`snow depth` = as.numeric(`snow depth`))
+
+# ^ all values that are T turn into NA by coercion 
+
+# refining for perpetuators, see welcome page
+perpetuators <- both %>%  drop_na() %>%
+  filter(`average temperature` != "NA" &
+         `minimum temperature` != "NA" &
+         `maximum temperature` != "NA") %>%
+  mutate(distinct_places = str_c(" ", Latitude, Longitude,
+                                 sep = " ")) %>%
+  count(Longitude, Latitude) 
+
+both_perpetuators <- inner_join(perpetuators, both,
+                                by = c("Longitude", "Latitude"))
+
+both_perpetuators_day <- both_perpetuators %>% count(Longitude,
+                        Latitude, Year, Month, Day, n,
+                        `maximum temperature`,
+                        `minimum temperature`,
+                        `average temperature`, `precipitation`,
+                        `snow fall`,`snow depth`,
+                        `Location Type`) %>% drop_na()
+
+both_perpetuators_day_count <- both_perpetuators_day %>%
+  count(Longitude, Latitude) 
+
+both_in_nyc <- inner_join(both_perpetuators_day,
+                    both_perpetuators_day_count, 
+                    by = c("Longitude", "Latitude"))%>% 
+  unite(Created_Date, Year, Month, Day, sep = "-")%>% 
+  drop_na() %>%
+  filter(nnn>=20) %>% mutate(distinct_places = str_c(" ",
+         Latitude,Longitude, sep=" "))
+
+both_in_nyc0 <- both_in_nyc
+
+both_in_nyc <- both_in_nyc %>%  distinct(distinct_places,
+                                         .keep_all = TRUE) 
+
+avg_temps <- both_in_nyc0 %>% group_by(distinct_places) %>% 
+  summarize(`average temperature` = mean(`average temperature`),
+            `minimum temperature` = mean(`minimum temperature`),
+            `maximum temperature` = mean(`maximum temperature`))
+
+both_in_nyc <- left_join(both_in_nyc, avg_temps, by = c(
+                 "distinct_places", "average temperature",
+                 "minimum temperature", "maximum temperature"))
+
+# making a holiday dataset
+holiday_data <- both %>%  mutate(
+  holiday = "", 
+  holiday = ifelse((Month == "01" & Day == "01"),
+                   "New Year's Eve 2016", holiday),
+  holiday = ifelse((Month == "02" & Day == "14"),
+                   "Valentine's Day", holiday),
+  holiday = ifelse((Month == "03" & Day == "17"),
+                   "St. Patrick's Day", holiday),
+  holiday = ifelse((Month == "03" & Day == "27"),
+                   "Easter", holiday),
+  holiday = ifelse((Month == "05" & Day == "30"),
+                   "Memorial Day", holiday),
+  holiday = ifelse((Month == "07" & Day == "04"),
+                   "Independence Day", holiday),
+  holiday = ifelse((Month == "10" & Day == "31"),
+                   "Halloween", holiday),
+  holiday = ifelse((Month == "11" & Day == "24"),
+                   "Thanksgiving", holiday),
+  holiday = ifelse((Month == "12" & Day == "25"),
+                   "Easter", holiday),
+  holiday = ifelse((Month == "12" & Day == "31"),
+                   "New Year's Eve 2017", holiday)
+)%>%
+  filter(!(holiday == "") & !( 
+    `Location Type`== "House of Worship")) 
+
+#Wrangling for Non-Perpetrators
+final_no <- inner_join(both_perpetuators_day, both_perpetuators_day_count, by = c("Longitude", "Latitude")) %>% 
+  drop_na() %>% 
+  filter(nnn<50) #definition of Non-Perpetrator
+
+```
+# Everyone Else
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+#Graph of Average Temperature for Non-Perpetrators
+ggplot(final_no, aes(x = `average temperature`)) +
+  geom_histogram(bins = 30, color = 'black', fill ="purple") + 
+  labs(x= "Average Temperature (Fahrenheit)", y = "count", title = "Average Temperature for Non-Perpetrators")
+
+```
+
+Our main dataset has a total of 147,960 unique non-perpetuators (94%) and 9,897 unique perpetuators (6%). In other words, for every unique perpetuator, there are 15 unique noisemakers that are not reported again in 2016 following their only offense. This graph takes a look at the average temperature that day for party/noise complaints made about non-perpetuators. We can interpret from this visual that non-perpetrators commit their reported offenses during warmer temperatures, especially at 75 degrees Fahrenheit, midway between the heat of 80 degrees Fahrenheit and the comfortable room temperature of 70 degrees Fahrenheit. At the same time, loud party/noise complaint volume for non-perpetuators are less common at temperatures around 25 degrees Fahrenheit and below, already below the initial freezing temperature of 32 degrees Fahrenheit. One reason for this could be because people who are not perpetuators tend to be quieter and more socially insulated during colder temperatures and/or are louder and more social at warmer temperatures. In addition, we chose to display the histogram as purple, because it is the neutral color between red and blue, which are representative of hot and cold temperatures. Like all the visuals on this page, this one’s color scheme is also fitting as a remix of the plasma color scheme used on the front page map.
+
+We can say that this graph, combined with what we know from the introduction page, gives us more context when understanding these noisemakers. When we were working earlier on the Leaflet map to plot all these complaints, not only were there more gold dots in the city, but there were also more widespread dots in areas perpetuators did not cluster in, including Queens, Staten Island, and other areas closer to the water. We can say based on this information that perpetuators cluster in Brooklyn and Upper Manhattan, whereas non-perpetuators recorded in this dataset are typically recorded while on summer vacation. Again, we would have shown this on the Leaflet map, but due to the sheer volume of non-perpetuators it would slow rendering to a drastic crawl.
+
+# Holiday Cheer? 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+# main graph
+ggplot(holiday_data, aes(x = holiday))+geom_bar(
+  fill="violetred2", color="black")+
+  coord_flip()+
+  labs(x= "Holiday", y = "Count",
+       title = "Complaint Volume by Holiday")
+
+# faceted graph by location type
+ggplot(holiday_data, aes(x = holiday))+geom_bar(
+  fill="gold", color="black")+
+  coord_flip()+facet_wrap(~`Location Type`)+
+  labs(x= "Holiday", y = "Count",
+       title = "Complaint Volume by Holiday and Location Type")
+
+```
+
+Finally, we decided to filter our data for commonly-celebrated holidays out of curiosity and see what we could learn about noisemakers in this context. We want to talk about the general results for this, but also felt it was important to investigate this issue faceting by location type, so we included both of these visualizations for this section. Immediately we can see that Easter and Independence Day have the most complaints logged, since they are the only two holidays to log over 1750 complaints. The holidays in spring and summer logged more complaints than those in winter and fall. Surprisingly, the two quietest holidays are also two holidays expected to be somewhat loud: St. Patrick's Day and Halloween, both barely clearing 250 complaints. It is possible that out-of-towners could be making up somewhat summery non-perpetrators increasing the complaint levels of holidays like Easter and Independence Day. Furthermore, it comes as no surprise that New Year's Eve 2016 has more complaints than New Year's Eve 2017, especially since the later noisemakers persist, the more complaints they solicit. 
+
+Turning our attention towards the same data but filtered by location type, we have a few different interesting things to talk about, some key insights from the second graph. The two loudest holiday celebrations reported from clubs, bars, and restaurants were New Year's Eve 2016 and Easter. Reasonably, the New Year's Eve trend from the previous graph is echoed in this facet. The quietest holiday celebrations in those areas were Valentine's Day, which makes sense because it is a day where people celebrate their relationships and it does not have a loud, aggressive vibe like that in that kind of setting. Since most of our reports were sent in from locations reported as houses and residential areas, the graph for this location type has all of the trends as described in the overall holiday analysis. Moving on to stores and commercial sites, the two holidays logging the most complaints for that location type were Easter and Valentine's Day. This makes sense given that those are two holidays involving candy and novelty purchase and distribution.
+
+# In Conclusion
+Now we know these insights about the noisemakers reported in 2016: The reports come to us mostly from residential buildings and houses, and for every perpetuator recorded in this dataset. Perpetuators tend to raise the volume in colder temperatures, especially around Upper Manhattan and Brooklyn. However, non-perpetuators are distributed more evenly, and are more active during the summer months. On top of that, the two holidays with the most complaint volume are Easter and Independence Day. We hope you had fun reading about what we found, and hopefully you can use this data to help plan a trip or two if you want less noise when visiting NYC.
+
+
+# Works Cited
+
+*[Weather data in New York City - 2016](https://www.kaggle.com/mathijs/weather-data-in-new-york-city-2016 ){target="_blank"}, Kaggle Inc., 2017.
+*[2016 Parties in New York](https://www.kaggle.com/somesnm/partynyc ){target="_blank"}, Kaggle Inc., 2017.
+*[Temperature](https://www.cdfa.ca.gov/dms/KidsPage/Temperature.htm  ){target="_blank"}, California Department of Food and Agriculture, 2017.

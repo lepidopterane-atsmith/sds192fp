@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Group 12: Sarah Abowitz and Victoria Zheng" />
+
+
+<title>More information</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Who Are The Noisemakers?</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Welcome</a>
+</li>
+<li>
+  <a href="more_info.html">More info</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">More information</h1>
+<h4 class="author"><em>Group 12: Sarah Abowitz and Victoria Zheng</em></h4>
+<h4 class="date"><em>Last updated on 2018-12-21</em></h4>
+
+</div>
+
+
+<!-- wranglezone ~ for loading and wrangling data! -->
+<div id="everyone-else" class="section level1">
+<h1>Everyone Else</h1>
+<p><img src="more_info_files/figure-html/unnamed-chunk-3-1.png" width="768" /></p>
+<p>Our main dataset has a total of 147,960 unique non-perpetuators (94%) and 9,897 unique perpetuators (6%). In other words, for every unique perpetuator, there are 15 unique noisemakers that are not reported again in 2016 following their only offense. This graph takes a look at the average temperature that day for party/noise complaints made about non-perpetuators. We can interpret from this visual that non-perpetrators commit their reported offenses during warmer temperatures, especially at 75 degrees Fahrenheit, midway between the heat of 80 degrees Fahrenheit and the comfortable room temperature of 70 degrees Fahrenheit. At the same time, loud party/noise complaint volume for non-perpetuators are less common at temperatures around 25 degrees Fahrenheit and below, already below the initial freezing temperature of 32 degrees Fahrenheit. One reason for this could be because people who are not perpetuators tend to be quieter and more socially insulated during colder temperatures and/or are louder and more social at warmer temperatures. In addition, we chose to display the histogram as purple, because it is the neutral color between red and blue, which are representative of hot and cold temperatures. Like all the visuals on this page, this one’s color scheme is also fitting as a remix of the plasma color scheme used on the front page map.</p>
+<p>We can say that this graph, combined with what we know from the introduction page, gives us more context when understanding these noisemakers. When we were working earlier on the Leaflet map to plot all these complaints, not only were there more gold dots in the city, but there were also more widespread dots in areas perpetuators did not cluster in, including Queens, Staten Island, and other areas closer to the water. We can say based on this information that perpetuators cluster in Brooklyn and Upper Manhattan, whereas non-perpetuators recorded in this dataset are typically recorded while on summer vacation. Again, we would have shown this on the Leaflet map, but due to the sheer volume of non-perpetuators it would slow rendering to a drastic crawl.</p>
+</div>
+<div id="holiday-cheer" class="section level1">
+<h1>Holiday Cheer?</h1>
+<p><img src="more_info_files/figure-html/unnamed-chunk-4-1.png" width="768" /><img src="more_info_files/figure-html/unnamed-chunk-4-2.png" width="768" /></p>
+<p>Finally, we decided to filter our data for commonly-celebrated holidays out of curiosity and see what we could learn about noisemakers in this context. We want to talk about the general results for this, but also felt it was important to investigate this issue faceting by location type, so we included both of these visualizations for this section. Immediately we can see that Easter and Independence Day have the most complaints logged, since they are the only two holidays to log over 1750 complaints. The holidays in spring and summer logged more complaints than those in winter and fall. Surprisingly, the two quietest holidays are also two holidays expected to be somewhat loud: St. Patrick’s Day and Halloween, both barely clearing 250 complaints. It is possible that out-of-towners could be making up somewhat summery non-perpetrators increasing the complaint levels of holidays like Easter and Independence Day. Furthermore, it comes as no surprise that New Year’s Eve 2016 has more complaints than New Year’s Eve 2017, especially since the later noisemakers persist, the more complaints they solicit.</p>
+<p>Turning our attention towards the same data but filtered by location type, we have a few different interesting things to talk about, some key insights from the second graph. The two loudest holiday celebrations reported from clubs, bars, and restaurants were New Year’s Eve 2016 and Easter. Reasonably, the New Year’s Eve trend from the previous graph is echoed in this facet. The quietest holiday celebrations in those areas were Valentine’s Day, which makes sense because it is a day where people celebrate their relationships and it does not have a loud, aggressive vibe like that in that kind of setting. Since most of our reports were sent in from locations reported as houses and residential areas, the graph for this location type has all of the trends as described in the overall holiday analysis. Moving on to stores and commercial sites, the two holidays logging the most complaints for that location type were Easter and Valentine’s Day. This makes sense given that those are two holidays involving candy and novelty purchase and distribution.</p>
+</div>
+<div id="in-conclusion" class="section level1">
+<h1>In Conclusion</h1>
+<p>Now we know these insights about the noisemakers reported in 2016: The reports come to us mostly from residential buildings and houses, and for every perpetuator recorded in this dataset. Perpetuators tend to raise the volume in colder temperatures, especially around Upper Manhattan and Brooklyn. However, non-perpetuators are distributed more evenly, and are more active during the summer months. On top of that, the two holidays with the most complaint volume are Easter and Independence Day. We hope you had fun reading about what we found, and hopefully you can use this data to help plan a trip or two if you want less noise when visiting NYC.</p>
+</div>
+<div id="works-cited" class="section level1">
+<h1>Works Cited</h1>
+<p><em><a href="https://www.kaggle.com/mathijs/weather-data-in-new-york-city-2016" target="_blank">Weather data in New York City - 2016</a>, Kaggle Inc., 2017. </em><a href="https://www.kaggle.com/somesnm/partynyc" target="_blank">2016 Parties in New York</a>, Kaggle Inc., 2017. *<a href="https://www.cdfa.ca.gov/dms/KidsPage/Temperature.htm" target="_blank">Temperature</a>, California Department of Food and Agriculture, 2017.</p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

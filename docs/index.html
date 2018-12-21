@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Group 12: Sarah Abowitz and Victoria Zheng" />
+
+
+<title>Who Are The Noisemakers? | Analyzing the Loudest Parties in NYC</title>
+
+<script src="site_libs/jquery-1.12.4/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/htmlwidgets-1.3/htmlwidgets.js"></script>
+<link href="site_libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="site_libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="site_libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="site_libs/Proj4Leaflet-1.0.1/proj4-compressed.js"></script>
+<script src="site_libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="site_libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="site_libs/leaflet-binding-2.0.2/leaflet.js"></script>
+<script src="site_libs/leaflet-providers-1.1.17/leaflet-providers.js"></script>
+<script src="site_libs/leaflet-providers-plugin-2.0.2/leaflet-providers-plugin.js"></script>
+
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Who Are The Noisemakers?</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Welcome</a>
+</li>
+<li>
+  <a href="more_info.html">More info</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Who Are The Noisemakers? | Analyzing the Loudest Parties in NYC</h1>
+<h4 class="author"><em>Group 12: Sarah Abowitz and Victoria Zheng</em></h4>
+<h4 class="date"><em>Last updated on 2018-12-21</em></h4>
+
+</div>
+
+
+<!-- wranglezone ~ for loading and wrangling data! -->
+<div id="welcome" class="section level1">
+<h1>Welcome</h1>
+<p><div id="htmlwidget-a47748f149e033e9b90d" style="width:768px;height:432px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a47748f149e033e9b90d">{"x":{"options":{"minZoom":10,"maxZoom":18,"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron",null,null,{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addCircleMarkers","args":[[40.579065138428,40.7312809520098,40.7127456366557,40.6471319002079,40.7490561479465,40.7625354109418,40.7157236599107,40.7187345978711,40.7171643242697,40.7258432236679,40.7234936736955,40.7622605032308,40.7605832295011,40.7251729791558,40.6791541331573,40.7811818316741,40.7248371631877,40.725534233198,40.7493447919428,40.6370973446398,40.6803520252142,40.6830437162318,40.7900556109726,40.7102422757987,40.6827204207205,40.6599984075311,40.6803371279022,40.7616724525879,40.6465212956931,40.7077373040406,40.6772179706892,40.8210363131572,40.6539105638198,40.7426378132274,40.8241616647931,40.8241039696922,40.7109130499499,40.8217922436831,40.8003832693502,40.7110114979571,40.8215614368267,40.6821087798017,40.6438437690471,40.7808347230213,40.6818697479442,40.7039341329832,40.8086434084478,40.8305050655908,40.830979742328,40.8128118163289,40.7918611552297,40.8332046217891,40.8144277849576,40.8066979525465,40.6708817027645,40.8216668043747,40.8259484187019,40.8380195543254,40.6829056974519,40.6606782125585,40.8470071568789,40.8194968206041,40.8298656742523,40.8303622606255,40.6739747330147,40.8420459079229,40.8450841029231,40.7968894699585,40.6962225505144,40.6653465301246,40.848977663722,40.7741147417975,40.8519569474164,40.6165503289221,40.7991675460131,40.7042541348118,40.8617713533172,40.7027771100722,40.8616587764479,40.858447450533,40.8615077582433,40.8614610939471,40.8315271048226,40.8590887241246,40.8086655942212,40.8658269058158,40.7407053255569,40.8608611994498,40.8643770322675,40.8261043447277,40.863851956918,40.8254370149146,40.761254018823,40.8650479673911,40.6647422189636,40.8292478992005,40.8405913689875,40.8322885254243,40.8661834400147,40.8683389378311,40.8346469681713,40.7016958822392,40.8412267091942,40.842209083719,40.7571055124953,40.7056514294218,40.8604014005172,40.8579882185846,40.6463340855277,40.8582714485906,40.8849611894113,40.8218598517831,40.8217665151489,40.858166847239,40.8675842608402,40.8503391841904,40.8722303566294,40.8236068962887,40.6349207374486,40.8195146490584,40.851231906912,40.8810190185417,40.8445371724623,40.8727728572724,40.8247757286612,40.8245945314593,40.8775571606658,40.8305407872415,40.8587476839271,40.8906069135531,40.8320609530503,40.8861688644149,40.6499816814193,40.6779387187688,40.8411838273385,40.5896547109683,40.5959955366994],[-74.1081128795339,-74.0066967170919,-74.0060094979618,-74.0046234115379,-74.001479734162,-73.9933651175421,-73.9932218780341,-73.9922114814074,-73.9889073040976,-73.9886280549743,-73.9882532526608,-73.988004557424,-73.9859220439239,-73.984190557723,-73.9834299276308,-73.9812452501691,-73.9783207529914,-73.9778046059726,-73.976937701529,-73.97622345656,-73.9747658788869,-73.9708276159393,-73.9688342190868,-73.9635079176,-73.9632922252599,-73.960997983209,-73.9607769756192,-73.960447514912,-73.9603211845118,-73.9583586771599,-73.9576891362091,-73.9551914288314,-73.9538044322947,-73.9535805176118,-73.9529780570442,-73.9528407970262,-73.9514888834749,-73.951220174454,-73.9508927333173,-73.9506339413677,-73.9506314180216,-73.9499126075681,-73.9498116086872,-73.949574753844,-73.949371966288,-73.9475518766957,-73.9475235508939,-73.947462946461,-73.947115670645,-73.9457392692754,-73.9453915904407,-73.9448047651251,-73.9443290168962,-73.9429122619687,-73.9420479847492,-73.9412049016104,-73.940922895895,-73.9407025685327,-73.9403573591995,-73.9398113533527,-73.9381933759623,-73.938041893168,-73.9367783561208,-73.9364020783049,-73.9362303586303,-73.9353428040829,-73.93499287643,-73.9347726739001,-73.933915505024,-73.9338091209489,-73.9329360180768,-73.9318849453639,-73.9304605646824,-73.9302015335975,-73.9300100554494,-73.9299437983035,-73.9293946564588,-73.9293863269372,-73.9293224715851,-73.9292788886689,-73.9292250213708,-73.9292178406138,-73.9288630322153,-73.9276875715826,-73.9276628828936,-73.9276007046568,-73.926802026261,-73.9267348529568,-73.9265357497056,-73.925772241787,-73.9252311923814,-73.9252093189248,-73.9248807048671,-73.924192226717,-73.9241711621872,-73.9228924216947,-73.9222576529971,-73.9221228095727,-73.9189304294535,-73.9163607375224,-73.9153731735381,-73.9135980172727,-73.9125891670684,-73.91228428654,-73.9080865586075,-73.9069889134908,-73.9058433974594,-73.9051238096342,-73.903666245051,-73.9024627387268,-73.899638885275,-73.8958789201429,-73.895861000916,-73.8958365402412,-73.8932149821039,-73.8930908540731,-73.8895808773564,-73.8885703894082,-73.8879450900061,-73.8858964461836,-73.8852420040115,-73.8841382534089,-73.8794743015977,-73.877748994086,-73.8773421643517,-73.8772991398564,-73.8729452664743,-73.8660428640408,-73.8656245442024,-73.862283324608,-73.8501001477941,-73.8450523940483,-73.8375861803183,-73.820090239775,-73.8173465762839,-73.7861701276948,-73.7421870727165],[5.8,6.4,6,11.6,6.6,5.7,7.2,5.9,7.1,6.7,7.1,5.7,15.4,5.5,8.2,5.1,5.6,6.7,6.9,8.4,6.3,11.8,5.1,5.2,5.6,5.4,10.8,8.9,10.3,6.1,5.6,5.1,9.6,5.1,6.4,5.8,8.1,5.6,5,6.6,5.5,5.7,5,5,14.4,6.2,5,5,5.1,5.2,7.9,6.7,7.4,6.2,5,6.1,5.3,5.6,6.2,6,5.4,5.4,10.4,5.1,5.3,7.2,8.7,7.4,6.1,6.3,8.8,5.7,9.7,12.6,8,5.4,5.9,6,5.6,9.7,7.3,5.4,22.6,5.6,6.9,5.1,5.3,5.1,6.1,5.4,6.1,5,5.2,6.7,5.4,6.8,8,5.3,5.6,7.7,8.2,9.3,5.4,8,5.9,6.9,5.1,9.7,6.2,6.6,6.1,5.1,6,11.7,5.9,6.5,21.8,5,5.7,9.5,6,7.2,5.2,5,5,7.4,5.2,6.5,17.3,5.1,5.6,6,10,6.4,7.3,6.5,7.2],null,null,{"interactive":true,"className":"","stroke":true,"color":["#C9447A","#C13B82","#B93388","#F7E225","#C13B82","#B93388","#CC4878","#E76D5B","#B93388","#FCA338","#C13B82","#DF6263","#C13B82","#AC2694","#B93388","#BF3984","#E76D5B","#C13B82","#F7E225","#AC2694","#B93388","#B93388","#C13B82","#B7318A","#B93388","#AE2892","#B93388","#F89441","#C9447A","#8707A6","#E76F5A","#C9447A","#C13B82","#F9963F","#AE2892","#B93388","#C9447A","#C13B82","#B52F8C","#C13B82","#C9447A","#FA9E3B","#8A09A5","#EA7457","#C13B82","#C13B82","#E76D5B","#E56B5D","#C33D80","#C13B82","#B93388","#E76D5B","#AC2694","#E76D5B","#C33D80","#C13B82","#E76D5B","#B93388","#BF3984","#6E00A8","#B93388","#6700A8","#C9447A","#C9447A","#B93388","#EB7655","#F3EF27","#B93388","#C13B82","#C13B82","#6700A8","#C9447A","#C13B82","#C13B82","#C33D80","#C13B82","#DF6263","#F9DC24","#F79143","#C13B82","#C33D80","#DF6263","#C13B82","#C33D80","#B52F8C","#F7E225","#AC2694","#C13B82","#DE5F65","#43039E","#C13B82","#C13B82","#8707A6","#B93388","#C13B82","#A62098","#B93388","#8405A7","#B93388","#FCA636","#C9447A","#B93388","#8707A6","#C13B82","#C13B82","#F0F921","#FEB72D","#C9447A","#C13B82","#C13B82","#AC2694","#C9447A","#B93388","#B93388","#6700A8","#A31E9A","#C13B82","#C9447A","#C13B82","#C13B82","#C13B82","#0D0887","#C13B82","#C9447A","#C13B82","#C13B82","#E76D5B","#E76F5A","#C13B82","#C13B82","#AC2694","#C33D80","#DF6263","#CC4878","#D35171","#C13B82","#C33D80"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["#C9447A","#C13B82","#B93388","#F7E225","#C13B82","#B93388","#CC4878","#E76D5B","#B93388","#FCA338","#C13B82","#DF6263","#C13B82","#AC2694","#B93388","#BF3984","#E76D5B","#C13B82","#F7E225","#AC2694","#B93388","#B93388","#C13B82","#B7318A","#B93388","#AE2892","#B93388","#F89441","#C9447A","#8707A6","#E76F5A","#C9447A","#C13B82","#F9963F","#AE2892","#B93388","#C9447A","#C13B82","#B52F8C","#C13B82","#C9447A","#FA9E3B","#8A09A5","#EA7457","#C13B82","#C13B82","#E76D5B","#E56B5D","#C33D80","#C13B82","#B93388","#E76D5B","#AC2694","#E76D5B","#C33D80","#C13B82","#E76D5B","#B93388","#BF3984","#6E00A8","#B93388","#6700A8","#C9447A","#C9447A","#B93388","#EB7655","#F3EF27","#B93388","#C13B82","#C13B82","#6700A8","#C9447A","#C13B82","#C13B82","#C33D80","#C13B82","#DF6263","#F9DC24","#F79143","#C13B82","#C33D80","#DF6263","#C13B82","#C33D80","#B52F8C","#F7E225","#AC2694","#C13B82","#DE5F65","#43039E","#C13B82","#C13B82","#8707A6","#B93388","#C13B82","#A62098","#B93388","#8405A7","#B93388","#FCA636","#C9447A","#B93388","#8707A6","#C13B82","#C13B82","#F0F921","#FEB72D","#C9447A","#C13B82","#C13B82","#AC2694","#C9447A","#B93388","#B93388","#6700A8","#A31E9A","#C13B82","#C9447A","#C13B82","#C13B82","#C13B82","#0D0887","#C13B82","#C9447A","#C13B82","#C13B82","#E76D5B","#E76F5A","#C13B82","#C13B82","#AC2694","#C33D80","#DF6263","#CC4878","#D35171","#C13B82","#C33D80"],"fillOpacity":0.25},null,null,["This Club/Bar/Restaurant <br/> partied 58 different days <br/> with an average temperature of 40 °F","This Club/Bar/Restaurant <br/> partied 64 different days <br/> with an average temperature of 38 °F","This Street/Sidewalk <br/> partied 60 different days <br/> with an average temperature of 36 °F","This Park/Playground <br/> partied 116 different days <br/> with an average temperature of 71 °F","This Residential Building/House <br/> partied 66 different days <br/> with an average temperature of 38 °F","This Club/Bar/Restaurant <br/> partied 57 different days <br/> with an average temperature of 36 °F","This Store <br/> partied 72 different days <br/> with an average temperature of 41 °F","This Street/Sidewalk <br/> partied 59 different days <br/> with an average temperature of 49.5 °F","This Residential Building/House <br/> partied 71 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 67 different days <br/> with an average temperature of 60.5 °F","This Club/Bar/Restaurant <br/> partied 71 different days <br/> with an average temperature of 38 °F","This Club/Bar/Restaurant <br/> partied 57 different days <br/> with an average temperature of 47 °F","This Club/Bar/Restaurant <br/> partied 154 different days <br/> with an average temperature of 38 °F","This Club/Bar/Restaurant <br/> partied 55 different days <br/> with an average temperature of 33 °F","This Club/Bar/Restaurant <br/> partied 82 different days <br/> with an average temperature of 36 °F","This Street/Sidewalk <br/> partied 51 different days <br/> with an average temperature of 37.5 °F","This Club/Bar/Restaurant <br/> partied 56 different days <br/> with an average temperature of 49.5 °F","This Store <br/> partied 67 different days <br/> with an average temperature of 38 °F","This Store <br/> partied 69 different days <br/> with an average temperature of 71 °F","This Residential Building/House <br/> partied 84 different days <br/> with an average temperature of 33 °F","This Store <br/> partied 63 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 118 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 51 different days <br/> with an average temperature of 38 °F","This Club/Bar/Restaurant <br/> partied 52 different days <br/> with an average temperature of 35.5 °F","This Club/Bar/Restaurant <br/> partied 56 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 54 different days <br/> with an average temperature of 33.5 °F","This Store <br/> partied 108 different days <br/> with an average temperature of 36 °F","This Club/Bar/Restaurant <br/> partied 89 different days <br/> with an average temperature of 57.5 °F","This Residential Building/House <br/> partied 103 different days <br/> with an average temperature of 40 °F","This Residential Building/House <br/> partied 61 different days <br/> with an average temperature of 25.5 °F","This Store <br/> partied 56 different days <br/> with an average temperature of 50 °F","This Street/Sidewalk <br/> partied 51 different days <br/> with an average temperature of 40 °F","This Residential Building/House <br/> partied 96 different days <br/> with an average temperature of 38 °F","This Club/Bar/Restaurant <br/> partied 51 different days <br/> with an average temperature of 58 °F","This Residential Building/House <br/> partied 64 different days <br/> with an average temperature of 33.5 °F","This Residential Building/House <br/> partied 58 different days <br/> with an average temperature of 36 °F","This Club/Bar/Restaurant <br/> partied 81 different days <br/> with an average temperature of 40 °F","This Residential Building/House <br/> partied 56 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 50 different days <br/> with an average temperature of 35 °F","This Store <br/> partied 66 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 55 different days <br/> with an average temperature of 40 °F","This Store <br/> partied 57 different days <br/> with an average temperature of 59.5 °F","This Residential Building/House <br/> partied 50 different days <br/> with an average temperature of 26 °F","This Club/Bar/Restaurant <br/> partied 50 different days <br/> with an average temperature of 51 °F","This Club/Bar/Restaurant <br/> partied 144 different days <br/> with an average temperature of 38 °F","This Club/Bar/Restaurant <br/> partied 62 different days <br/> with an average temperature of 38 °F","This Street/Sidewalk <br/> partied 50 different days <br/> with an average temperature of 49.5 °F","This Store <br/> partied 50 different days <br/> with an average temperature of 49 °F","This Street/Sidewalk <br/> partied 51 different days <br/> with an average temperature of 38.5 °F","This Street/Sidewalk <br/> partied 52 different days <br/> with an average temperature of 38 °F","This Club/Bar/Restaurant <br/> partied 79 different days <br/> with an average temperature of 36 °F","This Street/Sidewalk <br/> partied 67 different days <br/> with an average temperature of 49.5 °F","This Club/Bar/Restaurant <br/> partied 74 different days <br/> with an average temperature of 33 °F","This Store <br/> partied 62 different days <br/> with an average temperature of 49.5 °F","This Store <br/> partied 50 different days <br/> with an average temperature of 38.5 °F","This Residential Building/House <br/> partied 61 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 53 different days <br/> with an average temperature of 49.5 °F","This Street/Sidewalk <br/> partied 56 different days <br/> with an average temperature of 36 °F","This Club/Bar/Restaurant <br/> partied 62 different days <br/> with an average temperature of 37.5 °F","This Residential Building/House <br/> partied 60 different days <br/> with an average temperature of 21 °F","This Store <br/> partied 54 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 54 different days <br/> with an average temperature of 20 °F","This Residential Building/House <br/> partied 104 different days <br/> with an average temperature of 40 °F","This Residential Building/House <br/> partied 51 different days <br/> with an average temperature of 40 °F","This Residential Building/House <br/> partied 53 different days <br/> with an average temperature of 36 °F","This Club/Bar/Restaurant <br/> partied 72 different days <br/> with an average temperature of 51.5 °F","This Club/Bar/Restaurant <br/> partied 87 different days <br/> with an average temperature of 73 °F","This Store <br/> partied 74 different days <br/> with an average temperature of 36 °F","This Store <br/> partied 61 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 63 different days <br/> with an average temperature of 38 °F","This Store <br/> partied 88 different days <br/> with an average temperature of 20 °F","This Residential Building/House <br/> partied 57 different days <br/> with an average temperature of 40 °F","This Residential Building/House <br/> partied 97 different days <br/> with an average temperature of 38 °F","This Store <br/> partied 126 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 80 different days <br/> with an average temperature of 38.5 °F","This Club/Bar/Restaurant <br/> partied 54 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 59 different days <br/> with an average temperature of 47 °F","This Club/Bar/Restaurant <br/> partied 60 different days <br/> with an average temperature of 70 °F","This Residential Building/House <br/> partied 56 different days <br/> with an average temperature of 57 °F","This Residential Building/House <br/> partied 97 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 73 different days <br/> with an average temperature of 38.5 °F","This Residential Building/House <br/> partied 54 different days <br/> with an average temperature of 47 °F","This Residential Building/House <br/> partied 226 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 56 different days <br/> with an average temperature of 38.5 °F","This Residential Building/House <br/> partied 69 different days <br/> with an average temperature of 35 °F","This Store <br/> partied 51 different days <br/> with an average temperature of 71 °F","This Residential Building/House <br/> partied 53 different days <br/> with an average temperature of 33 °F","This Residential Building/House <br/> partied 51 different days <br/> with an average temperature of 38 °F","This Club/Bar/Restaurant <br/> partied 61 different days <br/> with an average temperature of 46.5 °F","This Residential Building/House <br/> partied 54 different days <br/> with an average temperature of 14 °F","This Residential Building/House <br/> partied 61 different days <br/> with an average temperature of 38 °F","This Street/Sidewalk <br/> partied 50 different days <br/> with an average temperature of 38 °F","This Street/Sidewalk <br/> partied 52 different days <br/> with an average temperature of 25.5 °F","This Residential Building/House <br/> partied 67 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 54 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 68 different days <br/> with an average temperature of 31.5 °F","This Residential Building/House <br/> partied 80 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 53 different days <br/> with an average temperature of 25 °F","This Store <br/> partied 56 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 77 different days <br/> with an average temperature of 61 °F","This Residential Building/House <br/> partied 82 different days <br/> with an average temperature of 40 °F","This Residential Building/House <br/> partied 93 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 54 different days <br/> with an average temperature of 25.5 °F","This Residential Building/House <br/> partied 80 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 59 different days <br/> with an average temperature of 38 °F","This Club/Bar/Restaurant <br/> partied 69 different days <br/> with an average temperature of 74.5 °F","This Residential Building/House <br/> partied 51 different days <br/> with an average temperature of 64 °F","This Residential Building/House <br/> partied 97 different days <br/> with an average temperature of 40 °F","This Club/Bar/Restaurant <br/> partied 62 different days <br/> with an average temperature of 38 °F","This Club/Bar/Restaurant <br/> partied 66 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 61 different days <br/> with an average temperature of 33 °F","This Residential Building/House <br/> partied 51 different days <br/> with an average temperature of 40 °F","This Residential Building/House <br/> partied 60 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 117 different days <br/> with an average temperature of 36 °F","This Residential Building/House <br/> partied 59 different days <br/> with an average temperature of 20 °F","This Residential Building/House <br/> partied 65 different days <br/> with an average temperature of 31 °F","This Residential Building/House <br/> partied 218 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 50 different days <br/> with an average temperature of 40 °F","This Residential Building/House <br/> partied 57 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 95 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 60 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 72 different days <br/> with an average temperature of 7 °F","This Residential Building/House <br/> partied 52 different days <br/> with an average temperature of 38 °F","This Store <br/> partied 50 different days <br/> with an average temperature of 40 °F","This Residential Building/House <br/> partied 50 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 74 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 52 different days <br/> with an average temperature of 49.5 °F","This Residential Building/House <br/> partied 65 different days <br/> with an average temperature of 50 °F","This Residential Building/House <br/> partied 173 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 51 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 56 different days <br/> with an average temperature of 33 °F","This Residential Building/House <br/> partied 60 different days <br/> with an average temperature of 38.5 °F","This Club/Bar/Restaurant <br/> partied 100 different days <br/> with an average temperature of 47 °F","This Club/Bar/Restaurant <br/> partied 64 different days <br/> with an average temperature of 41 °F","This Street/Sidewalk <br/> partied 73 different days <br/> with an average temperature of 43 °F","This Residential Building/House <br/> partied 65 different days <br/> with an average temperature of 38 °F","This Residential Building/House <br/> partied 72 different days <br/> with an average temperature of 38.5 °F"],null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addLegend","args":[{"colors":["#0D0887 , #290592 4.44444444444444%, #6700A8 19.2592592592593%, #9E199D 34.0740740740741%, #C9447A 48.8888888888889%, #E76F5A 63.7037037037037%, #FBA139 78.5185185185185%, #F9DC24 93.3333333333333%, #F0F921 "],"labels":["10","20","30","40","50","60","70"],"na_color":null,"na_label":"NA","opacity":0.5,"position":"bottomleft","type":"numeric","title":"Average Temperature","extra":{"p_1":0.0444444444444444,"p_n":0.933333333333333},"layerId":null,"className":"info legend","group":null}]}],"limits":{"lat":[40.579065138428,40.8906069135531],"lng":[-74.1081128795339,-73.7421870727165]},"fitBounds":[40.91097,-73.70479,40.51124,-74.25099,[]]},"evals":[],"jsHooks":[]}</script> <strong>Note:</strong> Click on the markers for more information about these parties. Bigger circles mean more parties per perpetuator.</p>
+<div id="an-introduction" class="section level2">
+<h2>An Introduction</h2>
+<p>New York City is the city that never sleeps. Since it is a big city, it is far from quiet. However, there is actually such a thing as being too loud in the Big Apple. Looking around for our project’s focus, we found a lot of data associated with an insight competition with taxi data, including this set from NYC Open Data. We never attended loud parties that warrant police complaints, so we chose this topic to get to know who the noisemakers are. To help us understand these noisemakers, we folded in another dataset containing weather data from 2016. This gave us the unique perspective we needed to answer the question we had when looking at the initial dataset: <strong>What can we learn from looking at a year of parties in NYC that were reported to the police for inordinate volume levels?</strong></p>
+</div>
+<div id="of-parties-and-perpetuators" class="section level2">
+<h2>Of Parties and Perpetuators</h2>
+<p>The Leaflet map above is an interactive explorer of repeated noisemaking incidents. To refine this data, first we had to define a perpetuating circumstance. A perpetuator to us is a noisemaker who was reported from the same location on at least two different days. Then we refined further, focusing on more heavy-duty perpetuators who had partied on at least 50 days so that rendering the sheer load of perpetuators would not slow down leaflet. Perpetuators cluster around Brooklyn and Upper Manhattan, and most of them make noise in houses or other residential buildings. Looking at the average overall temperature of perpetuator reports, lower average temperatures averaged across reports for each perpetuator imply that perpetuators are more active during colder months. This trend towards more activity in lower average temperatures in the 30s and 40s is likely because some New Yorkers often leave the city during summertime, when more buildings in an area can increase the temperature.</p>
+<p><em>Further insights and a list of works cited can be found under <strong>More Information</strong>.</em></p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,185 @@
+---
+title: "Who Are The Noisemakers? | Analyzing the Loudest Parties in NYC"
+author: "Group 12: Sarah Abowitz and Victoria Zheng"
+date: "Last updated on `r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    code_folding: hide
+    df_print: kable
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# DO NOT EDIT THIS BLOCK UNLESS YOU KNOW WHAT YOU ARE DOING:
+
+# Set output types
+knitr::opts_chunk$set(
+  message = FALSE, warning = FALSE,results= FALSE, fig.width = 16/2, fig.height = 9/2
+)
+
+# Load necessary packages
+
+library(tidyverse)
+library(lubridate)
+library(leaflet)
+library(stringr)
+
+```
+
+<!-- wranglezone ~ for loading and wrangling data! -->
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# yeah so we were gonna WRANGLE that DATA
+
+# speaking of, we'll read the party data
+party_in_nyc <- read_csv("party_in_nyc.csv") %>%
+  drop_na() 
+
+# we'll read in the weather data too
+weather_in_nyc <- read_csv(
+  "weather_data_nyc_central_park_2016.csv") %>% drop_na() 
+
+weather_in_nyc$precipitation <- as.numeric(
+  weather_in_nyc$precipitation)
+
+weather_in_nyc$`snow fall` <- as.numeric(
+  weather_in_nyc$`snow fall`)
+
+weather_in_nyc$`snow depth` <- as.numeric(
+  weather_in_nyc$`snow depth`)
+
+# Victoria wanted to separate ymd elements  into their own 
+# columns
+partylook <- party_in_nyc %>% 
+  separate(col = 'Created Date', into = c("Created_Date",
+                                "Created_Time"), sep = " ") %>% 
+  mutate(CreatedDate = Created_Date) %>%
+  mutate(CreatedTime = Created_Time) %>%
+  separate( col = 'Closed Date', into = c("Closed_Date",
+                                 "Closed_Time"), sep = " ") %>%
+  mutate(Created_Date = ymd(Created_Date), Closed_Date = ymd(
+    Closed_Date), true_in2016 = str_detect(Created_Date,
+                                           "2016-")) %>% 
+  filter(true_in2016 == TRUE) %>%
+  separate(col = 'Created_Time', into = c("Created_Hour",
+             "Created_Minute", "Created_Second"), sep = ":") %>% 
+  separate( col = 'Created_Date', into = c("Year", "Month",
+                                           "Day"), sep = "-")
+#only if created in 2016 noise complaints
+
+# Victoria wanted to separate dmy elements  into their own 
+# columns
+weatherlook <- weather_in_nyc %>% 
+  separate(col = date, into = c("Day", "Month", "Year"),
+           sep = "-") %>%  
+  mutate(Day = recode(Day, "1" = "01", "2" = "02", "3"="03",
+         "4"="04", "5" = "05", "6"="06", "7"="07", "8"="08",
+         "9"="09")) %>%  
+  mutate(Month = recode(Month, "1" = "01", "2" = "02", "3"="03",
+         "4"="04", "5" = "05", "6"="06", "7"="07", "8"="08",
+         "9"="09"))
+
+# finally joining weather and party
+both <- left_join(partylook, weatherlook, by = c("Year",
+                                            "Month", "Day"))%>%
+  mutate(precipitation = as.numeric(precipitation)) %>%
+  mutate(`snow fall` = as.numeric(`snow fall`)) %>%
+  mutate(`snow depth` = as.numeric(`snow depth`))
+
+# ^ all values that are T turn into NA by coercion 
+
+# refining for perpetuators, see welcome page
+perpetuators <- both %>%  drop_na() %>%
+  filter(`average temperature` != "NA" &
+         `minimum temperature` != "NA" &
+         `maximum temperature` != "NA") %>%
+  mutate(distinct_places = str_c(" ", Latitude, Longitude,
+                                 sep = " ")) %>%
+  count(Longitude, Latitude) 
+
+both_perpetuators <- inner_join(perpetuators, both,
+                                by = c("Longitude", "Latitude"))
+
+# where are all the perpetuators?
+both_perpetuators_day <- both_perpetuators %>% count(Longitude,
+                        Latitude, Year, Month, Day, n,
+                        `maximum temperature`,
+                        `minimum temperature`,
+                        `average temperature`, `precipitation`,
+                        `snow fall`,`snow depth`,
+                        `Location Type`) %>% drop_na()
+
+# let's total up each perpetuator's score...
+both_perpetuators_day_count <- both_perpetuators_day %>%
+  count(Longitude, Latitude) 
+
+# aaaaand THIS is how we get the perpetuators count in a
+# perpetuators only dataset
+both_in_nyc <- inner_join(both_perpetuators_day,
+                    both_perpetuators_day_count, 
+                    by = c("Longitude", "Latitude"))%>% 
+  unite(Created_Date, Year, Month, Day, sep = "-")%>% 
+  drop_na() %>%
+  filter(nnn>=50) %>% mutate(distinct_places = str_c(" ",
+         Latitude,Longitude, sep=" "))
+
+both_in_nyc <- both_in_nyc %>%  distinct(distinct_places,
+                                         .keep_all = TRUE) 
+
+# we need to store both_in_nyc where we can use it for avg
+# reference, but not overwrite it completely
+both_in_nyc0 <- both_in_nyc
+
+# taking the meta-average temperature for each perpetrator
+avg_temps <- both_in_nyc0 %>% group_by(distinct_places) %>% 
+  summarize(`average temperature` = mean(`average temperature`),
+            `minimum temperature` = mean(`minimum temperature`),
+            `maximum temperature` = mean(`maximum temperature`))
+
+both_in_nyc <- left_join(both_in_nyc, avg_temps, by = c(
+                 "distinct_places", "average temperature",
+                 "minimum temperature", 
+                 "maximum temperature")) %>% 
+                mutate(`Location Type`= `Location Type`,
+                       `Location Type`= ifelse(
+                         `Location Type`=="Store/Commercial",
+                         "Store", `Location Type`))
+
+# palette for average temperature used in leaflet
+leaflet_pal <- colorNumeric(palette = "plasma",
+                    domain = both_in_nyc$`average temperature`)
+
+```
+
+# Welcome
+````{r, echo=FALSE, message=FALSE, warning=FALSE}
+# and here's where all the leaflet magic happens!
+leaflet(both_in_nyc, options = leafletOptions(minZoom = 10,
+                                               maxZoom = 18)) %>% 
+  addProviderTiles(providers$CartoDB.Positron) %>% 
+  addCircleMarkers(color = ~leaflet_pal(`average temperature`),
+                   lng = ~Longitude, lat = ~Latitude,
+                   radius = .1*both_in_nyc$nnn,
+                   fillOpacity = .25,
+                   popup = ~paste("This",`Location Type` ,"<br/>",
+                                  "partied",nnn,"different days",
+                      "<br/>",  "with an average temperature of",
+                      `average temperature`, "°F") ) %>% 
+  addLegend(pal = leaflet_pal, values = ~`average temperature`,
+            position = "bottomleft",
+            title = "Average Temperature") %>% 
+  fitBounds( lng1 = -73.70479, lat1 = 40.91097,
+             lng2 = -74.25099, lat2 = 40.51124)
+```
+**Note:** Click on the markers for more information about these parties. Bigger circles mean more parties per perpetuator. 
+
+## An Introduction 
+  New York City is the city that never sleeps. Since it is a big city, it is far from quiet. However, there is actually such a thing as being too loud in the Big Apple. Looking around for our project's focus, we found a lot of data associated with an insight competition with taxi data, including this set from NYC Open Data. We never attended loud parties that warrant police complaints, so we chose this topic to get to know who the noisemakers are. To help us understand these noisemakers, we folded in another dataset containing weather data from 2016. This gave us the unique perspective we needed to answer the question we had when looking at the initial dataset:
+  **What can we learn from looking at a year of parties in NYC that were reported to the police for inordinate volume levels?**
+
+## Of Parties and Perpetuators 
+  The Leaflet map above is an interactive explorer of repeated noisemaking incidents. To refine this data, first we had to define a perpetuating circumstance. A perpetuator to us is a noisemaker who  was reported from the same location on at least two different days. Then we refined further, focusing on more heavy-duty perpetuators who had partied on at least 50 days so that rendering the sheer load of perpetuators would not slow down leaflet. 
+  Perpetuators cluster around Brooklyn and Upper Manhattan, and most of them make noise in houses or other residential buildings. Looking at the average overall temperature of perpetuator reports, lower average temperatures averaged across reports for each perpetuator imply that perpetuators are more active during colder months. This trend towards more activity in lower average temperatures in the 30s and 40s is likely because some New Yorkers often leave the city during summertime, when more buildings in an area can increase the temperature.
+  
+*Further insights and a list of works cited can be found under **More Information**.* 
